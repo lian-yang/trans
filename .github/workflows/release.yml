@@ -27,25 +27,23 @@ jobs:
 
           mkdir -p dist
 
-          # linux/amd64
           GOOS=linux GOARCH=amd64 go build -ldflags "-X ${PACKAGE}.version=${VERSION}" -o dist/trans-linux-amd64 .
           tar -czf dist/trans-linux-amd64.tar.gz -C dist trans-linux-amd64
 
-          # linux/arm64
           GOOS=linux GOARCH=arm64 go build -ldflags "-X ${PACKAGE}.version=${VERSION}" -o dist/trans-linux-arm64 .
           tar -czf dist/trans-linux-arm64.tar.gz -C dist trans-linux-arm64
 
-          # darwin/amd64
           GOOS=darwin GOARCH=amd64 go build -ldflags "-X ${PACKAGE}.version=${VERSION}" -o dist/trans-darwin-amd64 .
           tar -czf dist/trans-darwin-amd64.tar.gz -C dist trans-darwin-amd64
 
-          # darwin/arm64
           GOOS=darwin GOARCH=arm64 go build -ldflags "-X ${PACKAGE}.version=${VERSION}" -o dist/trans-darwin-arm64 .
           tar -czf dist/trans-darwin-arm64.tar.gz -C dist trans-darwin-arm64
 
-          # windows/amd64
           GOOS=windows GOARCH=amd64 go build -ldflags "-X ${PACKAGE}.version=${VERSION}" -o dist/trans-windows-amd64.exe .
           cd dist && tar -czf trans-windows-amd64.exe.zip trans-windows-amd64.exe
+
+          # Remove raw binaries, keep only archives
+          cd dist && rm -f trans-linux-* trans-darwin-* trans-windows-*
 
       - name: Generate checksums
         run: |
@@ -58,3 +56,79 @@ jobs:
           tag_name: ${{ github.ref_name }}
           files: |
             dist/*
+
+  update-tap:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: lian-yang/homebrew-trans
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+      - name: Download checksums
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "${{ github.ref_name }}" \
+            --repo lian-yang/trans \
+            --pattern 'checksums.txt' \
+            --dir checksums
+
+      - name: Generate formula
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          CHECKSUMS="checksums/checksums.txt"
+
+          DARWIN_AMD64_SHA=$(grep 'trans-darwin-amd64.tar.gz' "$CHECKSUMS" | awk '{print $1}')
+          DARWIN_ARM64_SHA=$(grep 'trans-darwin-arm64.tar.gz' "$CHECKSUMS" | awk '{print $1}')
+          LINUX_AMD64_SHA=$(grep 'trans-linux-amd64.tar.gz' "$CHECKSUMS" | awk '{print $1}')
+          LINUX_ARM64_SHA=$(grep 'trans-linux-arm64.tar.gz' "$CHECKSUMS" | awk '{print $1}')
+
+          mkdir -p Formula
+
+          cat > Formula/trans.rb << FORMULA
+          class Trans < Formula
+            desc "Terminal AI translation tool powered by OpenAI"
+            homepage "https://github.com/lian-yang/trans"
+            version "${VERSION}"
+
+            on_macos do
+              if Hardware::CPU.intel?
+                url "https://github.com/lian-yang/trans/releases/download/v#{version}/trans-darwin-amd64.tar.gz"
+                sha256 "${DARWIN_AMD64_SHA}"
+              else
+                url "https://github.com/lian-yang/trans/releases/download/v#{version}/trans-darwin-arm64.tar.gz"
+                sha256 "${DARWIN_ARM64_SHA}"
+              end
+            end
+
+            on_linux do
+              if Hardware::CPU.intel?
+                url "https://github.com/lian-yang/trans/releases/download/v#{version}/trans-linux-amd64.tar.gz"
+                sha256 "${LINUX_AMD64_SHA}"
+              else
+                url "https://github.com/lian-yang/trans/releases/download/v#{version}/trans-linux-arm64.tar.gz"
+                sha256 "${LINUX_ARM64_SHA}"
+              end
+            end
+
+            def install
+              bin.install Dir["trans-*"].first => "trans"
+            end
+
+            test do
+              assert_match version.to_s, shell_output("\#{bin}/trans -V")
+            end
+          end
+          FORMULA
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/trans.rb
+          git diff --cached --quiet || git commit -m "bump trans to ${GITHUB_REF_NAME}"
+          git push
