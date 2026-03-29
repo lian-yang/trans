@@ -29,19 +29,19 @@ jobs:
 
           # linux/amd64
           GOOS=linux GOARCH=amd64 go build -ldflags "-X ${PACKAGE}.version=${VERSION}" -o dist/trans-linux-amd64 .
-          tar -czf dist/trans-linux-amd64.tar.gz -C dist/trans-linux-amd64
+          tar -czf dist/trans-linux-amd64.tar.gz -C dist trans-linux-amd64
 
           # linux/arm64
           GOOS=linux GOARCH=arm64 go build -ldflags "-X ${PACKAGE}.version=${VERSION}" -o dist/trans-linux-arm64 .
-          tar -czf dist/trans-linux-arm64.tar.gz -C dist/trans-linux-arm64
+          tar -czf dist/trans-linux-arm64.tar.gz -C dist trans-linux-arm64
 
           # darwin/amd64
           GOOS=darwin GOARCH=amd64 go build -ldflags "-X ${PACKAGE}.version=${VERSION}" -o dist/trans-darwin-amd64 .
-          tar -czf dist/trans-darwin-amd64.tar.gz -C dist/trans-darwin-amd64
+          tar -czf dist/trans-darwin-amd64.tar.gz -C dist trans-darwin-amd64
 
           # darwin/arm64
           GOOS=darwin GOARCH=arm64 go build -ldflags "-X ${PACKAGE}.version=${VERSION}" -o dist/trans-darwin-arm64 .
-          tar -czf dist/trans-darwin-arm64.tar.gz -C dist/trans-darwin-arm64
+          tar -czf dist/trans-darwin-arm64.tar.gz -C dist trans-darwin-arm64
 
           # windows/amd64
           GOOS=windows GOARCH=amd64 go build -ldflags "-X ${PACKAGE}.version=${VERSION}" -o dist/trans-windows-amd64.exe .
