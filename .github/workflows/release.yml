@@ -43,7 +43,7 @@ jobs:
           tar -czf dist/trans-windows-amd64.exe.zip -C dist trans-windows-amd64.exe
 
           # Remove raw binaries, keep only archives
-          rm -f dist/trans-linux-* dist/trans-darwin-* dist/trans-windows-*
+          rm -f dist/trans-linux-amd64 dist/trans-linux-arm64 dist/trans-darwin-amd64 dist/trans-darwin-arm64 dist/trans-windows-amd64.exe
 
       - name: Generate checksums
         run: |
