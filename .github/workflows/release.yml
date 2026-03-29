@@ -40,10 +40,10 @@ jobs:
           tar -czf dist/trans-darwin-arm64.tar.gz -C dist trans-darwin-arm64
 
           GOOS=windows GOARCH=amd64 go build -ldflags "-X ${PACKAGE}.version=${VERSION}" -o dist/trans-windows-amd64.exe .
-          cd dist && tar -czf trans-windows-amd64.exe.zip trans-windows-amd64.exe
+          tar -czf dist/trans-windows-amd64.exe.zip -C dist trans-windows-amd64.exe
 
           # Remove raw binaries, keep only archives
-          cd dist && rm -f trans-linux-* trans-darwin-* trans-windows-*
+          rm -f dist/trans-linux-* dist/trans-darwin-* dist/trans-windows-*
 
       - name: Generate checksums
         run: |
