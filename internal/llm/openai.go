@@ -74,6 +74,50 @@ Rules:
 - Detect the source language automatically.`, targetLang, targetLang)
 }
 
+// DetectLanguage detects the source language of the given text.
+// Returns the ISO 639-1 language code (e.g., "en", "ja", "ko").
+func (c *Client) DetectLanguage(text string) (string, error) {
+	reqBody := chatRequest{
+		Model:  c.model,
+		Stream: false,
+		Messages: []chatMessage{
+			{Role: "system", Content: "You are a language detector. Respond with ONLY the ISO 639-1 language code of the given text. For example: en, zh, ja, ko, fr, de, es, ru, etc."},
+			{Role: "user", Content: text},
+		},
+	}
+
+	body, err := json.Marshal(reqBody)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	resp, err := c.doRequest(body)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(data))
+	}
+
+	var result chatResponse
+	if err := json.Unmarshal(data, &result); err != nil {
+		return "", fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	if len(result.Choices) == 0 {
+		return "", fmt.Errorf("no response from API")
+	}
+
+	return strings.TrimSpace(result.Choices[0].Message.Content), nil
+}
+
 // Translate sends a non-stream request and returns the full translation.
 func (c *Client) Translate(text, targetLang string) (string, error) {
 	reqBody := chatRequest{

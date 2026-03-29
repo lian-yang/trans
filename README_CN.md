@@ -32,12 +32,28 @@ trans -t ja "good morning"
 trans -t ko "I love programming"
 # → 나는 프로그래밍을 좋아합니다.
 
-# 详细模式（显示语言标注）
+# 详细模式（显示源语言→目标语言标注）
 trans -v "hello world"
 # → [en→zh] 你好，世界
 
 # 指定模型
 trans -m gpt-4o "hello world"
+
+# 查看版本
+trans -V
+# → v1.0.0
+```
+
+### 流式控制
+
+默认自动检测输出模式：终端**流式**输出，管道**批量**返回。
+
+```bash
+# 强制流式（例如管道中实时查看翻译进度）
+echo "hello" | trans -s
+
+# 强制批量（例如终端中等待完整结果）
+trans --no-stream "hello world"
 ```
 
 ## 配置
@@ -87,6 +103,7 @@ trans -m gpt-4o "hello world"
 
 - **管道优先**：stdout 只输出翻译文本，错误走 stderr，不污染管道链
 - **自动流式**：终端模式流式输出，管道模式批量返回（`isatty` 检测）
+- **流式可控**：`-s` 强制流式，`--no-stream` 强制批量
 - **零 SDK**：纯 `net/http` + SSE 解析，不依赖 OpenAI SDK
 - **极简依赖**：仅 [cobra](https://github.com/spf13/cobra) + 标准库
 

@@ -38,6 +38,22 @@ trans -v "hello world"
 
 # Use a different model
 trans -m gpt-4o "hello world"
+
+# Print version
+trans -V
+# → v1.0.0
+```
+
+### Stream control
+
+By default, output mode is auto-detected: **streaming** in terminal, **batch** in pipe.
+
+```bash
+# Force streaming (e.g. real-time output in pipe)
+echo "hello" | trans -s
+
+# Force batch (e.g. wait for full result in terminal)
+trans --no-stream "hello world"
 ```
 
 ## Configuration
@@ -69,7 +85,10 @@ Priority: **CLI flags > environment variables > config file > defaults**
 ```
 -t, --to string      target language (default: zh)
 -m, --model string   model to use (default: gpt-4o-mini)
--v, --verbose        show source language annotation
+-s, --stream         force streaming output
+    --no-stream      force batch output (disable streaming)
+-v, --verbose        show source→target language annotation
+-V, --version        print version and exit
 ```
 
 ## Compatible Providers
