@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 
 	"github.com/lian-yang/trans/internal/config"
 	"github.com/lian-yang/trans/internal/input"
@@ -17,10 +18,44 @@ var (
 	flagVerbose  bool
 	flagStream   bool
 	flagNoStream bool
+	flagVersion  bool
 )
 
-// Version can be overridden via -ldflags at build time.
-var version = "v1.0.0"
+// version is resolved via three-tier fallback at init time:
+//  1. -ldflags injection (highest priority)
+//  2. runtime/debug build info (vcs.tag from go install)
+//  3. "unknown" (lowest priority)
+var version = ""
+
+func init() {
+	resolveVersion()
+
+	rootCmd.Flags().BoolVarP(&flagVersion, "version", "V", false, "print version and exit")
+	rootCmd.Flags().StringVarP(&flagTo, "to", "t", "", "target language (default: zh)")
+	rootCmd.Flags().StringVarP(&flagModel, "model", "m", "", "model to use (default: gpt-4o-mini)")
+	rootCmd.Flags().BoolVarP(&flagVerbose, "verbose", "v", false, "show source language annotation")
+	rootCmd.Flags().BoolVarP(&flagStream, "stream", "s", false, "force streaming output (default: auto-detect by TTY)")
+	rootCmd.Flags().BoolVar(&flagNoStream, "no-stream", false, "force batch output (disable streaming)")
+}
+
+func resolveVersion() {
+	if version != "" {
+		return // already set via ldflags
+	}
+	if bi, ok := debug.ReadBuildInfo(); ok {
+		for _, s := range bi.Settings {
+			if s.Key == "vcs.tag" && s.Value != "" {
+				version = s.Value
+				return
+			}
+		}
+		if bi.Main.Version != "" {
+			version = bi.Main.Version
+			return
+		}
+	}
+	version = "unknown"
+}
 
 var rootCmd = &cobra.Command{
 	Use:   "trans [text]",
@@ -31,20 +66,9 @@ Supports pipe and argument input:
   echo "hello world" | trans
   trans "hello world"
   cat README.md | trans -t ja`,
-	Version:           version,
 	Args:              cobra.MinimumNArgs(0),
 	RunE:              run,
 	DisableAutoGenTag: true,
-}
-
-func init() {
-	rootCmd.SetVersionTemplate("{{.Version}}\n")
-	rootCmd.Flags().BoolP("version", "V", false, "print version and exit")
-	rootCmd.Flags().StringVarP(&flagTo, "to", "t", "", "target language (default: zh)")
-	rootCmd.Flags().StringVarP(&flagModel, "model", "m", "", "model to use (default: gpt-4o-mini)")
-	rootCmd.Flags().BoolVarP(&flagVerbose, "verbose", "v", false, "show source language annotation")
-	rootCmd.Flags().BoolVarP(&flagStream, "stream", "s", false, "force streaming output (default: auto-detect by TTY)")
-	rootCmd.Flags().BoolVar(&flagNoStream, "no-stream", false, "force batch output (disable streaming)")
 }
 
 // Execute runs the root command.
@@ -55,6 +79,12 @@ func Execute() {
 }
 
 func run(cmd *cobra.Command, args []string) error {
+	// Handle --version before any I/O or config loading.
+	if flagVersion {
+		fmt.Println(version)
+		return nil
+	}
+
 	// 1. Load config: file → env → defaults.
 	cfg, err := config.Load()
 	if err != nil {
