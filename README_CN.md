@@ -8,10 +8,24 @@
 
 ## 安装
 
+### Homebrew（macOS / Linux）
+
 ```bash
-go build -o trans .
-# 或
+brew tap lian-yang/trans
+brew install trans
+```
+
+### Go install
+
+```bash
 go install github.com/lian-yang/trans@latest
+```
+
+### 从源码构建
+
+```bash
+git clone https://github.com/lian-yang/trans.git
+cd trans && go build -o trans .
 ```
 
 ## 使用
