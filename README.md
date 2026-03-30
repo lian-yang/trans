@@ -28,6 +28,15 @@ git clone https://github.com/lian-yang/trans.git
 cd trans && go build -o trans .
 ```
 
+## Update
+
+```bash
+# Self-update to the latest version (from GitHub Releases)
+trans update
+```
+
+> Homebrew users: `trans update` will detect the Homebrew installation and prompt `brew upgrade trans` instead.
+
 ## Usage
 
 ```bash
@@ -103,6 +112,12 @@ Priority: **CLI flags > environment variables > config file > defaults**
     --no-stream      force batch output (disable streaming)
 -v, --verbose        show source→target language annotation
 -V, --version        print version and exit
+```
+
+### Subcommands
+
+```
+update               self-update to the latest version
 ```
 
 ## Compatible Providers

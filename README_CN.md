@@ -28,6 +28,15 @@ git clone https://github.com/lian-yang/trans.git
 cd trans && go build -o trans .
 ```
 
+## 更新
+
+```bash
+# 自更新到最新版本（从 GitHub Releases 下载）
+trans update
+```
+
+> Homebrew 用户：`trans update` 会自动检测 Homebrew 安装并提示使用 `brew upgrade trans`。
+
 ## 使用
 
 ```bash
@@ -99,7 +108,16 @@ trans --no-stream "hello world"
 ```
 -t, --to string      目标语言（默认：zh）
 -m, --model string   模型（默认：gpt-4o-mini）
--v, --verbose        显示源语言标注
+-s, --stream         强制流式输出
+    --no-stream      强制批量输出
+-v, --verbose        显示源语言→目标语言标注
+-V, --version        查看版本
+```
+
+### 子命令
+
+```
+update               自更新到最新版本
 ```
 
 ## 兼容服务商
