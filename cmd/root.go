@@ -18,6 +18,7 @@ var (
 	flagVerbose  bool
 	flagStream   bool
 	flagNoStream bool
+	flagContrast bool
 	flagVersion  bool
 )
 
@@ -36,6 +37,7 @@ func init() {
 	rootCmd.Flags().BoolVarP(&flagVerbose, "verbose", "v", false, "show source language annotation")
 	rootCmd.Flags().BoolVarP(&flagStream, "stream", "s", false, "force streaming output (default: auto-detect by TTY)")
 	rootCmd.Flags().BoolVar(&flagNoStream, "no-stream", false, "force batch output (disable streaming)")
+	rootCmd.Flags().BoolVarP(&flagContrast, "contrast", "c", false, "contrast mode: show original and translated lines alternately")
 }
 
 func resolveVersion() {
@@ -126,7 +128,7 @@ func run(cmd *cobra.Command, args []string) error {
 		if cfg.Verbose && srcLang != "" {
 			fmt.Fprintf(os.Stdout, "[%s→%s] ", srcLang, cfg.TargetLang)
 		}
-		err = client.TranslateStream(text, cfg.TargetLang, func(chunk string) {
+		err = client.TranslateStream(text, cfg.TargetLang, flagContrast, func(chunk string) {
 			fmt.Print(chunk)
 		})
 		if err != nil {
@@ -136,7 +138,7 @@ func run(cmd *cobra.Command, args []string) error {
 		fmt.Println() // trailing newline
 	} else {
 		// Batch for pipe.
-		result, err := client.Translate(text, cfg.TargetLang)
+		result, err := client.Translate(text, cfg.TargetLang, flagContrast)
 		if err != nil {
 			output.WriteErr("%v", err)
 			return err

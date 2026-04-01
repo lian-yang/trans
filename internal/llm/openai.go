@@ -65,7 +65,17 @@ type streamChunk struct {
 }
 
 // BuildSystemPrompt constructs the translation system prompt.
-func BuildSystemPrompt(targetLang string) string {
+func BuildSystemPrompt(targetLang string, contrast bool) string {
+	if contrast {
+		return fmt.Sprintf(`You are a translation engine. Translate the following text to %s.
+Rules:
+- Process the text line by line:
+  - If a line needs translation: output the ORIGINAL line, then the TRANSLATED line on the next line.
+  - If a line is already in %s, or contains only code/numbers/punctuation/whitespace: output just that single line unchanged.
+- Preserve the original formatting (markdown, code blocks, newlines).
+- Detect the source language automatically.
+- Output ONLY the result, nothing else.`, targetLang, targetLang)
+	}
 	return fmt.Sprintf(`You are a translation engine. Translate the following text to %s.
 Rules:
 - Output ONLY the translated text, nothing else.
@@ -119,12 +129,12 @@ func (c *Client) DetectLanguage(text string) (string, error) {
 }
 
 // Translate sends a non-stream request and returns the full translation.
-func (c *Client) Translate(text, targetLang string) (string, error) {
+func (c *Client) Translate(text, targetLang string, contrast bool) (string, error) {
 	reqBody := chatRequest{
 		Model:  c.model,
 		Stream: false,
 		Messages: []chatMessage{
-			{Role: "system", Content: BuildSystemPrompt(targetLang)},
+			{Role: "system", Content: BuildSystemPrompt(targetLang, contrast)},
 			{Role: "user", Content: text},
 		},
 	}
@@ -166,12 +176,12 @@ func (c *Client) Translate(text, targetLang string) (string, error) {
 }
 
 // TranslateStream sends a stream request and calls onChunk for each token.
-func (c *Client) TranslateStream(text, targetLang string, onChunk func(string)) error {
+func (c *Client) TranslateStream(text, targetLang string, contrast bool, onChunk func(string)) error {
 	reqBody := chatRequest{
 		Model:  c.model,
 		Stream: true,
 		Messages: []chatMessage{
-			{Role: "system", Content: BuildSystemPrompt(targetLang)},
+			{Role: "system", Content: BuildSystemPrompt(targetLang, contrast)},
 			{Role: "user", Content: text},
 		},
 	}

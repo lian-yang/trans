@@ -108,6 +108,7 @@ Priority: **CLI flags > environment variables > config file > defaults**
 ```
 -t, --to string      target language (default: zh)
 -m, --model string   model to use (default: gpt-4o-mini)
+-c, --contrast       contrast mode: show original and translated lines alternately
 -s, --stream         force streaming output
     --no-stream      force batch output (disable streaming)
 -v, --verbose        show source→target language annotation

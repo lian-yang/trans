@@ -108,6 +108,7 @@ trans --no-stream "hello world"
 ```
 -t, --to string      目标语言（默认：zh）
 -m, --model string   模型（默认：gpt-4o-mini）
+-c, --contrast       对照模式：交替显示原文和译文
 -s, --stream         强制流式输出
     --no-stream      强制批量输出
 -v, --verbose        显示源语言→目标语言标注
