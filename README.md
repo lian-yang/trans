@@ -59,6 +59,15 @@ trans -t ko "I love programming"
 trans -v "hello world"
 # → [en→zh] 你好，世界
 
+# Contrast mode (show original + translation line by line)
+trans -c "hello world"
+# → hello world
+# → 你好，世界
+
+cat doc.md | trans -c
+# Lines needing translation show original + translated pair
+# Lines already in target language show once unchanged
+
 # Use a different model
 trans -m gpt-4o "hello world"
 

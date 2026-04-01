@@ -59,6 +59,15 @@ trans -t ko "I love programming"
 trans -v "hello world"
 # → [en→zh] 你好，世界
 
+# 对照模式（交替显示原文和译文）
+trans -c "hello world"
+# → hello world
+# → 你好，世界
+
+cat doc.md | trans -c
+# 需要翻译的行显示原文+译文两行
+# 已是目标语言的行只显示一行
+
 # 指定模型
 trans -m gpt-4o "hello world"
 
