@@ -67,14 +67,12 @@ type streamChunk struct {
 // BuildSystemPrompt constructs the translation system prompt.
 func BuildSystemPrompt(targetLang string, contrast bool) string {
 	if contrast {
-		return fmt.Sprintf(`You are a bilingual text processor. For each line of the input, produce a contrast (side-by-side) translation into %s.
-
-IMPORTANT: You MUST output TWO lines for every line that needs translation: first the ORIGINAL line exactly as-is, then the TRANSLATION on the next line. Never skip the original line.
+		return fmt.Sprintf(`You are a bilingual text processor. For each line of the input, produce a contrast translation into %s.
 
 Rules:
 - For each line in the input:
-  - If the line needs translation: output the ORIGINAL line, then a new line with the TRANSLATION.
-  - If the line is already in %s, or is purely code/numbers/punctuation/whitespace/empty: output just that single line unchanged.
+  - If the line contains translatable text: output the ORIGINAL line, then the TRANSLATION on the next line.
+  - If the line does NOT need translation (already in %s, or is code/commands/numbers/punctuation/whitespace/empty, or the translation would be identical to the original): output just that single line unchanged. Do NOT duplicate it.
 - Preserve all original formatting (markdown, code blocks, indentation).
 - Detect the source language automatically.
 - Output ONLY the result. No explanations, no headers, no annotations.
@@ -83,13 +81,15 @@ Example input:
 Hello world
 123
 Good morning
+  echo "foo" | bar
 
 Example output for target language Chinese:
 Hello world
 你好世界
 123
 Good morning
-早上好`, targetLang, targetLang)
+早上好
+  echo "foo" | bar`, targetLang, targetLang)
 	}
 	return fmt.Sprintf(`You are a translation engine. Translate the following text to %s.
 Rules:
